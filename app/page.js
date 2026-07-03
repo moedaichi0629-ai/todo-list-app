@@ -8,6 +8,7 @@ export default function Home() {
   const [tasks, setTasks] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   // 初回表示時にlocalStorageから保存済みのタスクを読み込む
   useEffect(() => {
@@ -31,10 +32,29 @@ export default function Home() {
     }
   }, [tasks, isLoaded]);
 
-  const addTask = () => {
+  const isEditing = editingId !== null;
+
+  const handleSubmit = () => {
     const text = inputValue.trim();
     if (!text) return;
-    setTasks((prev) => [...prev, { id: Date.now(), text, completed: false }]);
+    if (isEditing) {
+      setTasks((prev) =>
+        prev.map((task) => (task.id === editingId ? { ...task, text } : task))
+      );
+      setEditingId(null);
+    } else {
+      setTasks((prev) => [...prev, { id: Date.now(), text, completed: false }]);
+    }
+    setInputValue("");
+  };
+
+  const startEdit = (task) => {
+    setEditingId(task.id);
+    setInputValue(task.text);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
     setInputValue("");
   };
 
@@ -48,10 +68,12 @@ export default function Home() {
 
   const deleteTask = (id) => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
+    if (id === editingId) cancelEdit();
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") addTask();
+    if (e.key === "Enter") handleSubmit();
+    if (e.key === "Escape" && isEditing) cancelEdit();
   };
 
   const remainingCount = tasks.filter((task) => !task.completed).length;
@@ -63,21 +85,29 @@ export default function Home() {
           📝 ToDoリスト
         </h1>
 
-        <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="新しいタスクを入力..."
-            className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            placeholder={isEditing ? "タスクを編集..." : "新しいタスクを入力..."}
+            className="min-w-[140px] flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
           />
           <button
-            onClick={addTask}
+            onClick={handleSubmit}
             className="shrink-0 whitespace-nowrap rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600 active:bg-blue-700"
           >
-            追加
+            {isEditing ? "保存" : "追加"}
           </button>
+          {isEditing && (
+            <button
+              onClick={cancelEdit}
+              className="shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            >
+              キャンセル
+            </button>
+          )}
         </div>
 
         {tasks.length === 0 ? (
@@ -89,7 +119,11 @@ export default function Home() {
             {tasks.map((task) => (
               <li
                 key={task.id}
-                className="flex items-center gap-3 rounded-lg border border-slate-200 px-4 py-3 transition-colors hover:bg-slate-50"
+                className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                  task.id === editingId
+                    ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200"
+                    : "border-slate-200 hover:bg-slate-50"
+                }`}
               >
                 <input
                   type="checkbox"
@@ -106,6 +140,13 @@ export default function Home() {
                 >
                   {task.text}
                 </span>
+                <button
+                  onClick={() => startEdit(task)}
+                  aria-label="タスクを編集"
+                  className="shrink-0 rounded-md px-2 py-1 text-sm text-blue-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  編集
+                </button>
                 <button
                   onClick={() => deleteTask(task.id)}
                   aria-label="タスクを削除"
