@@ -4,7 +4,7 @@
 
 > 学習作品：外部API連携やWeb開発の学習成果として掲載しています。
 
-[作品一覧](https://github.com/moedaichi0629-ai/landing-page) · [ポートフォリオ](https://moedaichi0629-ai.github.io/landing-page/)
+[作品一覧](https://github.com/moedaichi0629-ai/landing-page) · [ポートフォリオ](https://moedaichi0629-ai.github.io/)
 
 ## 解決する課題
 
